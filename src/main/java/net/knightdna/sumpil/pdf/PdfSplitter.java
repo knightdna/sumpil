@@ -2,6 +2,7 @@ package net.knightdna.sumpil.pdf;
 
 import lombok.Cleanup;
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.multipdf.Splitter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
@@ -11,10 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+@UtilityClass
 public class PdfSplitter {
 
     @SneakyThrows
-    public static void split(Path pdfFilePath, int numberOfFiles) {
+    public void split(Path pdfFilePath, int numberOfFiles) {
         Splitter splitter = new Splitter();
 
         @Cleanup InputStream inputStream = Files.newInputStream(pdfFilePath);

@@ -2,6 +2,7 @@ package net.knightdna.sumpil.pdf;
 
 import lombok.Cleanup;
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.RandomAccessBufferedFileInputStream;
 import org.apache.pdfbox.io.RandomAccessRead;
@@ -22,13 +23,14 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+@UtilityClass
 public class PdfCompressor {
 
     // By default, the quality of the compressed image will be 50% of the original image
     private static final float COMPRESSION_FACTOR = 0.5f;
 
     @SneakyThrows
-    public static void compress(Path originalPdfPath) {
+    public void compress(Path originalPdfPath) {
         Path parentDirectory = originalPdfPath.getParent();
         String pdfBaseName = originalPdfPath.getFileName().toString();
         String fileName = com.google.common.io.Files.getNameWithoutExtension(pdfBaseName);
@@ -55,12 +57,14 @@ public class PdfCompressor {
     }
 
     @SneakyThrows
-    private static void scanResources(PDResources resources, PDDocument document) {
+    private void scanResources(PDResources resources, PDDocument document) {
         Iterable<COSName> xObjectNames = resources.getXObjectNames();
         for (COSName name : xObjectNames) {
             PDXObject xObject = resources.getXObject(name);
 
             if (xObject instanceof PDFormXObject) {
+                // Form XObject is similar to a mini-PDF embedded inside the main PDF document;
+                // thus, we need recursively scan its pages and compress its image resources
                 scanResources(((PDFormXObject) xObject).getResources(), document);
             }
 
