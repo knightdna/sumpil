@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,19 +39,15 @@ public class PdfCompressor {
 
         Path compressedPdfPath = parentDirectory.resolve(String.format("%s-compressed.%s", fileName, fileExtension));
 
-        RandomAccessRead randomAccessRead = new RandomAccessBufferedFileInputStream(Files.newInputStream(originalPdfPath));
+        @Cleanup InputStream originalPdfInputStream = Files.newInputStream(originalPdfPath);
+        RandomAccessRead randomAccessRead = new RandomAccessBufferedFileInputStream(originalPdfInputStream);
         PDFParser parser = new PDFParser(randomAccessRead);
         parser.parse();
 
         @Cleanup PDDocument document = parser.getPDDocument();
         document.getPages()
                 .iterator()
-                .forEachRemaining(page -> {
-                    // For each page in the PDF document:
-                    // 1. Get its image resource and perform image compression
-                    // 2. Override (replace) the original image with the compressed one
-                    scanResources(page.getResources(), document);
-                });
+                .forEachRemaining(page -> scanResources(page.getResources(), document));
 
         @Cleanup OutputStream compressedPdfOutputStream = Files.newOutputStream(compressedPdfPath);
         document.save(compressedPdfOutputStream);
